@@ -345,4 +345,145 @@ export default function FichasLDC() {
             <div style={{borderTop:"1px solid #eee8f8",margin:"4px 0 16px",paddingTop:14}}>
               <div style={{fontSize:11,color:"#5a2d82",fontWeight:700,letterSpacing:1,textTransform:"uppercase",marginBottom:12}}>👤 Responsable</div>
               <label style={labelStyle}>Nombre completo *</label>
-              <input value={responsable} onChange={e=>setResponsable(e.target.value)} placeholder="Nombre del inspector…" style={i
+              <input value={responsable} onChange={e=>setResponsable(e.target.value)} placeholder="Nombre del inspector…" style={inputStyle}/>
+              <label style={labelStyle}>Rol en la congregación</label>
+              <select value={rol} onChange={e=>setRol(e.target.value)} style={selectStyle}>
+                {ROLES.map(r=><option key={r}>{r}</option>)}
+              </select>
+            </div>
+
+            <button onClick={guardar} disabled={!responsable.trim()} style={{width:"100%",padding:"13px",borderRadius:9,border:"none",background:guardado?"#15803d":responsable.trim()?"#5a2d82":"#c4b8d4",color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:responsable.trim()?"pointer":"not-allowed",letterSpacing:0.5,transition:"background 0.2s"}}>
+              {guardado ? "✓ Ficha registrada" : "Registrar ficha"}
+            </button>
+            {!responsable.trim() && <div style={{fontSize:11,color:"#a094b4",textAlign:"center",marginTop:5}}>El nombre del responsable es obligatorio</div>}
+
+            {/* Botón WA post-guardar */}
+            {guardado && fichaGuardada && (
+              <button
+                onClick={()=>enviarWhatsApp(fichaGuardada)}
+                style={{marginTop:10,width:"100%",padding:"12px",borderRadius:9,border:"none",background:"#25d366",color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}
+              >
+                <span style={{fontSize:18}}>💬</span> Enviar por WhatsApp
+              </button>
+            )}
+            {guardado && fichaGuardada && fichaGuardada.fotos.length > 0 && (
+              <div style={{fontSize:10,color:"#8a7a9a",textAlign:"center",marginTop:5}}>
+                El texto se copia automáticamente. Adjunta las fotos manualmente en el chat.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── LISTA DE REGISTROS ── */}
+        {vista==="lista" && (
+          <>
+            {fichas.length===0 ? (
+              <div style={{textAlign:"center",color:"#a094b4",fontSize:13,padding:"40px 0"}}>
+                Sin fichas registradas aún.<br/>
+                <span onClick={()=>setVista("form")} style={{color:"#5a2d82",cursor:"pointer",fontWeight:600,textDecoration:"underline"}}>Crear primera ficha</span>
+              </div>
+            ) : (
+              <>
+                <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+                  {[["TODAS",`Todas (${fichas.length})`],["BIEN",`Bien (${conteos.BIEN})`],["ATENCION",`Atención (${conteos.ATENCION})`],["CRITICO",`Crítico (${conteos.CRITICO})`]].map(([f,label])=>(
+                    <button key={f} onClick={()=>setFiltroEstado(f)} style={{padding:"6px 12px",borderRadius:20,border:filtroEstado===f?"1.5px solid #5a2d82":"1.5px solid #ddd8e8",background:filtroEstado===f?"#5a2d82":"#fff",color:filtroEstado===f?"#fff":"#5a2d82",fontFamily:"inherit",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>{label}</button>
+                  ))}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {filtradas.map(f=>{
+                    const cfg=ESTADO_CONFIG[f.estado];
+                    const gc=GRUPO_COLOR[f.grupo]||"#5a2d82";
+                    return (
+                      <div key={f.id} onClick={()=>setFichaDetalle(f.id)} style={{background:"#fff",borderRadius:10,border:"1.5px solid #ddd8e8",borderLeft:`4px solid ${cfg.dot}`,padding:"13px 13px 11px",boxShadow:"0 1px 4px rgba(90,45,130,0.06)",cursor:"pointer"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                          <div style={{flex:1,minWidth:0}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
+                              <span style={{fontSize:10,fontWeight:700,background:cfg.bg,color:cfg.color,padding:"2px 7px",borderRadius:4,textTransform:"uppercase",letterSpacing:0.5}}>{cfg.icon} {cfg.label}</span>
+                              <span style={{fontSize:10,color:gc,fontWeight:600}}>{f.grupo}</span>
+                            </div>
+                            <div style={{fontSize:14,fontWeight:700,color:"#2d1a4a",marginBottom:4}}>{f.tarea}</div>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <div style={{width:22,height:22,borderRadius:"50%",background:"#5a2d82",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>
+                                {f.responsable.charAt(0).toUpperCase()}
+                              </div>
+                              <span style={{fontSize:12,color:"#5a4a6a"}}>{f.responsable}</span>
+                              {f.fotos && f.fotos.length > 0 && <span style={{fontSize:11,color:"#a094b4"}}>📷 {f.fotos.length}</span>}
+                            </div>
+                            <div style={{fontSize:10,color:"#b4a8c8",marginTop:5}}>{formatFecha(f.fecha)}</div>
+                          </div>
+                          <span style={{color:"#c4b8d4",fontSize:20,paddingLeft:8,alignSelf:"center"}}>›</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── PROGRAMA ANUAL ── */}
+        {vista==="programa" && (
+          <div style={{background:"#fff",borderRadius:12,border:"1.5px solid #ddd8e8",overflow:"hidden",boxShadow:"0 2px 10px rgba(90,45,130,0.07)"}}>
+            <div style={{padding:"14px 16px 10px",borderBottom:"1px solid #eee8f8"}}>
+              <div style={{fontSize:13,fontWeight:700,color:"#2d1a4a"}}>Programa de mantenimiento 2025</div>
+              <div style={{fontSize:11,color:"#8a7a9a",marginTop:2}}>Mes resaltado = programado · <span style={{background:"#e8f5e9",padding:"1px 5px",borderRadius:3,fontWeight:700,color:"#15803d"}}>verde</span> = mes actual</div>
+            </div>
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,minWidth:520}}>
+                <thead>
+                  <tr style={{background:"#f4f0fa"}}>
+                    <th style={{...th, textAlign:"left", width:130}}>Tarea</th>
+                    <th style={{...th, width:110}}>Encargado</th>
+                    {MESES.map((m,i)=>(
+                      <th key={i} style={{...th, background: i===mesActual?"#dcfce7":undefined, color: i===mesActual?"#15803d":"#5a4a6a", fontWeight: i===mesActual?800:600}}>{m}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {GRUPOS.map(g=>(
+                    <>
+                      <tr key={g}>
+                        <td colSpan={14} style={{background:GRUPO_COLOR[g],color:"#fff",padding:"5px 10px",fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{g}</td>
+                      </tr>
+                      {PROGRAMA.filter(p=>p.grupo===g).map((p,idx)=>{
+                        const registrada = fichas.some(f=>f.tarea===p.tarea && new Date(f.fecha).getMonth()===mesActual);
+                        return (
+                          <tr key={p.id} style={{background:idx%2===0?"#fff":"#faf9fc"}}
+                            onClick={()=>{ setTareaId(p.id); handleTarea(p.id); setVista("form"); }}
+                          >
+                            <td style={{...td, fontWeight:600, color:"#2d1a4a", cursor:"pointer", textDecoration: registrada?"underline":undefined}}>
+                              {registrada && <span style={{color:"#15803d",marginRight:4}}>✓</span>}
+                              {p.tarea}
+                            </td>
+                            <td style={{...td, color:"#5a4a6a", fontSize:10}}>{p.encargado}</td>
+                            {MESES.map((_,i)=>(
+                              <td key={i} style={{...td, textAlign:"center", background: i===mesActual?"#f0fdf4":undefined}}>
+                                {p.meses.includes(i) ? (
+                                  <span style={{color: i===mesActual?"#15803d":"#5a2d82", fontWeight:700, fontSize:13}}>✓</span>
+                                ) : null}
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{padding:"10px 16px",borderTop:"1px solid #eee8f8",fontSize:11,color:"#8a7a9a"}}>
+              Toca cualquier tarea para ir directo al formulario de registro.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const labelStyle  = {display:"block",fontSize:10,letterSpacing:1.5,textTransform:"uppercase",color:"#7a6a9a",marginBottom:5,fontWeight:600};
+const inputStyle  = {width:"100%",padding:"10px 11px",borderRadius:8,border:"1.5px solid #ddd8e8",fontFamily:"inherit",fontSize:13,color:"#2d1a4a",background:"#faf9fc",boxSizing:"border-box",marginBottom:13,outline:"none"};
+const selectStyle = {...inputStyle, cursor:"pointer"};
+const th = {padding:"7px 5px",fontSize:10,fontWeight:700,color:"#5a4a6a",textAlign:"center",borderBottom:"1px solid #eee8f8",whiteSpace:"nowrap"};
+const td = {padding:"7px 8px",fontSize:11,borderBottom:"1px solid #f4f0fa",verticalAlign:"middle"};
