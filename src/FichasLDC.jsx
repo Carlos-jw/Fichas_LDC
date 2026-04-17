@@ -131,7 +131,7 @@ async function generarPDF(ficha) {
 
   // Encargado programa
   doc.setTextColor(107,122,141); doc.setFontSize(7); doc.setFont("helvetica","bold");
-  doc.text("ENCARGADO EN PROGRAMA", margen, y); y += 5;
+  doc.text("RESPONSABLE DE LA FICHA", margen, y); y += 5;
   doc.setTextColor(30,58,95); doc.setFontSize(9); doc.setFont("helvetica","normal");
   doc.text(ficha.encargadoPrograma, margen, y); y += 13;
 
